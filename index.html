@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEPSE Clone Dashboard</title>
+    <!-- Load Pyodide engine to let the browser execute Python code -->
+    <script src="https://jsdelivr.net"></script>
+</head>
+<body>
+    <div style="text-align: center; margin-top: 50px;">
+        <h2>NEPSE Clone App</h2>
+        <div id="loading">Loading Python Environment (Please wait)...</div>
+        <div id="output" style="white-space: pre-wrap; font-family: monospace; margin-top: 20px;"></div>
+    </div>
+
+    <script type="text/javascript">
+        async function runNepseClone() {
+            try {
+                // Initialize Python in browser
+                let pyodide = await loadPyodide();
+                
+                // If your script uses external packages like 'requests', Pyodide needs to install them:
+                await pyodide.loadPackage("micropip");
+                const micropip = pyodide.pyimport("micropip");
+                await micropip.install("requests"); // Add other libraries if needed (e.g., beautifulsoup4)
+
+                document.getElementById("loading").style.display = "none";
+
+                // Fetch your python file dynamically
+                let response = await fetch('nepse_clone.py');
+                let pythonCode = await response.text();
+                
+                // Run the file and display the output
+                let result = await pyodide.runPythonAsync(pythonCode);
+                document.getElementById("output").innerText = result || "Script executed successfully.";
+            } catch (err) {
+                document.getElementById("output").innerText = "Error running script: " + err;
+            }
+        }
+        runNepseClone();
+    </script>
+</body>
+</html>
