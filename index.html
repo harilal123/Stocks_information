@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NEPSE Clone Dashboard</title>
-    <!-- Load Pyodide engine to let the browser execute Python code -->
+    <!-- Use the official stable release CDN for Pyodide -->
     <script src="https://jsdelivr.net"></script>
 </head>
 <body>
-    <div style="text-align: center; margin-top: 50px;">
+    <div style="text-align: center; margin-top: 50px; font-family: sans-serif;">
         <h2>NEPSE Clone App</h2>
         <div id="loading">Loading Python Environment (Please wait)...</div>
         <div id="output" style="white-space: pre-wrap; font-family: monospace; margin-top: 20px;"></div>
@@ -16,29 +16,41 @@
 
     <script type="text/javascript">
         async function runNepseClone() {
+            // Wait 1 second to ensure the script tag is completely registered by the browser
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            if (typeof loadPyodide === "undefined") {
+                document.getElementById("output").innerText = "Error: Pyodide CDN failed to load. Check your internet connection or script URL.";
+                return;
+            }
+
             try {
-                // Initialize Python in browser
+                // Initialize Python in the browser
                 let pyodide = await loadPyodide();
                 
-                // If your script uses external packages like 'requests', Pyodide needs to install them:
+                // Set up package installer
                 await pyodide.loadPackage("micropip");
                 const micropip = pyodide.pyimport("micropip");
-                await micropip.install("requests"); // Add other libraries if needed (e.g., beautifulsoup4)
+                
+                // If your file uses libraries like requests, bs4, beautifulsoup4, or pandas, list them here:
+                await micropip.install("requests"); 
 
                 document.getElementById("loading").style.display = "none";
 
-                // Fetch your python file dynamically
+                // Fetch your python file from the local repository directory
                 let response = await fetch('nepse_clone.py');
                 let pythonCode = await response.text();
                 
-                // Run the file and display the output
+                // Run the script
                 let result = await pyodide.runPythonAsync(pythonCode);
                 document.getElementById("output").innerText = result || "Script executed successfully.";
             } catch (err) {
-                document.getElementById("output").innerText = "Error running script: " + err;
+                document.getElementById("output").innerText = "Execution Error: " + err;
             }
         }
-        runNepseClone();
+        
+        // Execute the function after the window fully loads
+        window.addEventListener('load', runNepseClone);
     </script>
 </body>
 </html>
